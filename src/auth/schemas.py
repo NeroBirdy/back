@@ -8,13 +8,3 @@ class User(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class UserCreateDB(BaseModel):
-    telegram_id: int
-    token: Optional[dict[str, Any]] = None
-
-
-class UserUpdateDB(BaseModel):
-    telegram_id: int
-    token: Optional[dict[str, Any]] = None
