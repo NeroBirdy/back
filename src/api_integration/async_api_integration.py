@@ -13,10 +13,6 @@ __all__ = [
 ]
 
 
-import aiohttp
-import logging
-from urllib.parse import urljoin
-from typing import Dict, Optional
 
 class VKSException(Exception):
     """Кастомное исключение для ошибок VKS API"""
@@ -85,13 +81,12 @@ class VKS:
             async with self.__sess.post(
                 url, json=data or {}, timeout=self.__time
             ) as response:
-                logging.debug("Sending request to %s with data %s", url, data)
                 json = await response.json()
-                logging.debug("Received response: %s", json)
                 return self.check_response(json)
 
         except aiohttp.ClientError:
             raise VKSConnectionException("API unavailable")
+        
 
     async def __aenter__(self):
         await self.init_session()
