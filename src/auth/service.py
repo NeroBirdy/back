@@ -27,28 +27,26 @@ class UserService:
 
 
     @staticmethod
-    async def create(user_data: auth_schemas.UserCreateDB) -> auth_models.User:
+    async def create(user_data: auth_schemas.User) -> auth_models.User:
         """
         Создать нового пользователя.
         """
         async with async_session_maker() as session:
-            new_user = auth_models.User(
-                **user_data.model_dump()
-            )
-            session.add(new_user)
+            db_user = auth_models.User(**user_data.model_dump())
+            session.add(db_user)
             await session.commit()
-            await session.refresh(new_user)
-            return new_user
+            await session.refresh(db_user)
+            return user_data
 
     @staticmethod
-    async def update(telegram_id: int, user_data: auth_schemas.UserUpdateDB) -> auth_models.User:
+    async def update(user_data: auth_schemas.User) -> auth_models.User:
         """
         Обновить данные пользователя.
         """
         async with async_session_maker() as session:
             query = (
                 update(auth_models.User)
-                .where(auth_models.User.telegram_id == telegram_id)
+                .where(auth_models.User.telegram_id == user_data.telegram_id)
                 .values(**user_data.model_dump(exclude_unset=True))
                 .returning(auth_models.User)
             )
@@ -57,7 +55,7 @@ class UserService:
             if not updated_user:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"User with telegram_id {telegram_id} not found.",
+                    detail=f"User with telegram_id {user_data.telegram_id} not found.",
                 )
             await session.commit()
             return updated_user
