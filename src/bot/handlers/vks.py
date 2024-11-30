@@ -228,3 +228,4 @@ async def create_calendar_image(start_of_week, end_of_week, events):
     image.save(image_io, format="PNG")
     image_io.seek(0)
     return image_io
+
