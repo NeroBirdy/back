@@ -16,7 +16,7 @@ token = ""
 @router.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     # Создаем кнопку с WebApp
-    button = KeyboardButton(text="Открыть WebApp", web_app=types.WebAppInfo(url="https://d62d-188-19-202-149.ngrok-free.app/login"))
+    button = KeyboardButton(text="Открыть WebApp", web_app=types.WebAppInfo(url="https://15bc-188-19-202-149.ngrok-free.app/login"))
 
     # Создаем клавиатуру с этой кнопкой
     keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True)
