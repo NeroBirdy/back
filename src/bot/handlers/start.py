@@ -1,3 +1,5 @@
+import json
+
 from aiogram import types, Router
 from aiogram.filters import Command
 
@@ -30,9 +32,11 @@ async def webapp_data_handler(message: types.Message):
     # Проверяем, содержит ли сообщение данные WebApp
     if message.web_app_data:
         data = message.web_app_data.data
-        auth_schemas.UserCreateDB(
-            telegram_id = message.from_user.id,
-            token = data
-        )
+        json_data = json.loads(data)
+        await message.answer(json_data['token'])
+        # auth_schemas.UserCreateDB(
+        #     telegram_id = message.from_user.id,
+        #     token = data
+        # )
     else:
         await message.answer("Нет данных от WebApp.")
