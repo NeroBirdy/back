@@ -10,10 +10,11 @@ from src.auth import service as auth_service
 router = Router()
 
 # Клавиатура
-button = KeyboardButton(text="Расписание на эту неделю")
-keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True)
+button1 = KeyboardButton(text="Еженедельник на эту неделю")
+button2 = KeyboardButton(text="Еженедельник на следующую неделю")
+keyboard = ReplyKeyboardMarkup(keyboard=[[button1],[button2]], resize_keyboard=True)
 
-@router.message(F.text == "Расписание на эту неделю")
+@router.message(F.text == "Еженедельник на эту неделю")
 async def cmd_view_my_meetings(message: Message):
     current_user = await auth_service.UserService.get_by_telegram_id(telegram_id=message.from_user.id)
 
@@ -64,12 +65,70 @@ async def cmd_view_my_meetings(message: Message):
                 f.write(image.read())
 
             input_file = FSInputFile("schedule.png")
-            await message.answer_photo(input_file, caption="Ваше расписание на неделю")
+            await message.answer_photo(input_file, caption="Ваш еженедельник на эту неделю")
         else:
             await message.answer("На этой неделе нет мероприятий.")
 
     except Exception as err:
-        await message.answer(f"Произошла ошибка при обработке запроса: {err}")
+        await message.answer(f"Произошла ошибка")
+
+
+@router.message(F.text == "Еженедельник на следующую неделю")
+async def cmd_view_my_meetings(message: Message):
+    current_user = await auth_service.UserService.get_by_telegram_id(telegram_id=message.from_user.id)
+
+    if current_user is None:
+        await message.answer("Вы не авторизованы")
+        return
+
+    current_user_token = current_user.token.get("token")
+    base_url = "https://test.vcc.uriit.ru/api/meetings"
+    headers = {
+        "Authorization": f"Bearer {current_user_token}",
+        "accept": "application/json",
+    }
+    now = datetime.utcnow()
+
+    # Определение начала и конца недели
+    start_of_week = now - timedelta(days=now.weekday()) + timedelta(days=7)
+    end_of_week = start_of_week + timedelta(days=6) + timedelta(days=7)
+
+    params = {
+        "fromDatetime": start_of_week.isoformat(),
+        "toDatetime": end_of_week.isoformat(),
+        "buildingId": 2,
+        "sort_by": "id",
+    }
+
+    try:
+        async with AsyncClient() as client:
+            response = await client.get(base_url, headers=headers, params=params)
+            response.raise_for_status()
+
+        response_data = response.json()
+        meetings = response_data.get("data", [])
+
+        if meetings:
+            events = {
+                meeting["id"]: {
+                    "start": datetime.fromisoformat(meeting["startedAt"]),
+                    "end": datetime.fromisoformat(meeting["endedAt"]),
+                    "text": meeting.get("name", "Не указано")
+                }
+                for meeting in meetings
+            }
+
+            image = await create_calendar_image(start_of_week, end_of_week, events)
+            with open("schedule.png", "wb") as f:
+                f.write(image.read())
+
+            input_file = FSInputFile("schedule.png")
+            await message.answer_photo(input_file, caption="Ваш еженедельник на следующую неделю")
+        else:
+            await message.answer("На следующей неделе нет мероприятий")
+
+    except Exception as err:
+        await message.answer(f"Произошла ошибка")
 
 
 async def create_calendar_image(start_of_week, end_of_week, events):
@@ -82,9 +141,10 @@ async def create_calendar_image(start_of_week, end_of_week, events):
     font = ImageFont.truetype(font_path, 12)
     font_title = ImageFont.truetype(font_path, 16)
     font_events = ImageFont.truetype(font_path, 10)
+    font_date = ImageFont.truetype(font_path, 8)
 
     # Заголовок
-    draw.text((width // 2 - 50, 15), "Календарь на неделю", font=font_title, fill=(0, 0, 0))
+    draw.text((width // 2 - 50, 15), "Еженедельник", font=font_title, fill=(0, 0, 0))
 
     # Таблица
     table_start_y = 50
@@ -99,7 +159,10 @@ async def create_calendar_image(start_of_week, end_of_week, events):
 
     # Дни недели
     days_of_week = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    current_date = start_of_week
+
     for i, day in enumerate(days_of_week):
+        # Рисуем день недели
         bbox = draw.textbbox((0, 0), day, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
@@ -109,6 +172,20 @@ async def create_calendar_image(start_of_week, end_of_week, events):
             font=font,
             fill=(0, 0, 0)
         )
+
+        # Рисуем дату
+        date_text = current_date.strftime("%d.%m")
+        draw.text(
+            (1, table_start_y + i * row_height + 45),  # Левый верхний угол ячейки
+            date_text,
+            font=font_date,
+            fill=(0, 0, 0)
+        )
+
+        # Переходим к следующей дате
+        current_date += timedelta(days=1)
+
+    
     
     # Время с 6:00 до 23:00
     times = [f"{hour}:00" for hour in range(6, 24)]  
@@ -123,7 +200,6 @@ async def create_calendar_image(start_of_week, end_of_week, events):
             fill=(0, 0, 0)
         )
 
-    # Выделение событий
     for event_id, event_data in events.items():
         try:
             event_start = event_data["start"]
@@ -134,16 +210,20 @@ async def create_calendar_image(start_of_week, end_of_week, events):
             end_y = start_y + row_height
 
             draw.rectangle([start_x, start_y, end_x, end_y], fill=(123, 231, 128))
-            draw.text(
-                (start_x + 5, start_y + 5),
-                (event_data["text"][:10] + "...") if len(event_data["text"]) > 10 else event_data["text"],
-                font=font_events,
-                fill=(0, 0, 0)
-            )
+
+            camera_emoji_image = Image.open('src/bot/handlers/camera_emoji.png')
+
+            center_x = (start_x + end_x) // 2
+            center_y = (start_y + end_y) // 2
+
+            camera_emoji_resized = camera_emoji_image.resize((20, 16))
+
+            camera_emoji_position = (center_x - 20 // 2, center_y - 16 // 2)
+            image.paste(camera_emoji_resized, camera_emoji_position, camera_emoji_resized)
+
         except Exception as e:
             print(f"Ошибка обработки события {event_id}: {e}")
 
-    # Сохранение изображения в буфер
     image_io = BytesIO()
     image.save(image_io, format="PNG")
     image_io.seek(0)
