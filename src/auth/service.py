@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 
 
 from src.auth import models as auth_models
-from src.auth import shcemas as auth_schemas
+from src.auth import schemas as auth_schemas
 from src.database import async_session_maker
 
 

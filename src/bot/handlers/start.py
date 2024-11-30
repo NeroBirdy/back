@@ -2,6 +2,8 @@ from aiogram import types, Router
 from aiogram.filters import Command
 
 from src.bot.filters import filters
+from src.auth import service as auth_service
+from src.auth import schemas as auth_schemas
 
 from aiogram import Bot, Dispatcher, html, types
 from aiogram.client.default import DefaultBotProperties
@@ -28,6 +30,9 @@ async def webapp_data_handler(message: types.Message):
     # Проверяем, содержит ли сообщение данные WebApp
     if message.web_app_data:
         data = message.web_app_data.data
-        await message.answer(f"Получены данные из WebApp: {data}")
+        auth_schemas.UserCreateDB(
+            telegram_id = message.from_user.id,
+            token = data
+        )
     else:
         await message.answer("Нет данных от WebApp.")
