@@ -33,8 +33,10 @@ async def webapp_data_handler(message: types.Message):
 
         user_data = auth_schemas.User(
             telegram_id = message.from_user.id,
-            token = data
+            token = json_data
+            
         )
         await auth_service.UserService.create(user_data=user_data)
+
     else:
         await message.answer("Нет данных от WebApp.")
