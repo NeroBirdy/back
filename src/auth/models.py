@@ -10,10 +10,6 @@ class User(Base):
     __tablename__ = "users"
 
     telegram_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    email: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-    )
     token: Mapped[Optional[dict[str, Any]]] = mapped_column(
         JSON,
         nullable=True,

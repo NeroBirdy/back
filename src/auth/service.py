@@ -9,8 +9,8 @@ from src.database import async_session_maker
 
 
 class UserService:
-
-    async def get_by_telegram_id(self, telegram_id: int) -> auth_models.User:
+    @staticmethod
+    async def get_by_telegram_id(telegram_id: int) -> auth_models.User:
         """
         Получить пользователя по telegram_id.
         """
@@ -26,7 +26,8 @@ class UserService:
             return user
 
 
-    async def create(self, user_data: auth_schemas.UserCreateDB) -> auth_models.User:
+    @staticmethod
+    async def create(user_data: auth_schemas.UserCreateDB) -> auth_models.User:
         """
         Создать нового пользователя.
         """
@@ -39,8 +40,8 @@ class UserService:
             await session.refresh(new_user)
             return new_user
 
-
-    async def update(self, telegram_id: int, user_data: auth_schemas.UserUpdateDB) -> auth_models.User:
+    @staticmethod
+    async def update(telegram_id: int, user_data: auth_schemas.UserUpdateDB) -> auth_models.User:
         """
         Обновить данные пользователя.
         """

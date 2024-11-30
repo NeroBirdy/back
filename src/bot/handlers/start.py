@@ -1,3 +1,4 @@
+import json
 from aiogram import types, Router
 from aiogram.filters import Command
 
@@ -13,7 +14,6 @@ from aiogram.types import Message, WebAppData, KeyboardButton, ReplyKeyboardMark
 
 router = Router()
 
-token = ""
 
 @router.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -29,10 +29,12 @@ async def command_start_handler(message: Message) -> None:
 async def webapp_data_handler(message: types.Message):
     # Проверяем, содержит ли сообщение данные WebApp
     if message.web_app_data:
-        data = message.web_app_data.data
-        auth_schemas.UserCreateDB(
+        data = json.loads(message.web_app_data.data)
+
+        user_data = auth_schemas.UserCreateDB(
             telegram_id = message.from_user.id,
             token = data
         )
+        await auth_service.UserService.create(user_data=user_data)
     else:
         await message.answer("Нет данных от WebApp.")

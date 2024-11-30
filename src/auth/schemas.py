@@ -4,8 +4,7 @@ from pydantic import BaseModel, EmailStr
 
 class User(BaseModel):
     telegram_id: int
-    email: Optional[EmailStr]
-    token: Optional[dict[str, Any]]
+    token: Optional[dict[str, Any]] = None
 
     class Config:
         from_attributes = True
@@ -13,11 +12,9 @@ class User(BaseModel):
 
 class UserCreateDB(BaseModel):
     telegram_id: int
-    email: Optional[EmailStr]
-    token: Optional[dict[str, Any]]
+    token: Optional[dict[str, Any]] = None
 
 
 class UserUpdateDB(BaseModel):
     telegram_id: int
-    email: Optional[EmailStr]
-    token: Optional[dict[str, Any]]
+    token: Optional[dict[str, Any]] = None
