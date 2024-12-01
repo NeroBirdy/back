@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, Message, FSInputFile
-from aiogram import Router, F
+from aiogram import Router, F, types
 from httpx import AsyncClient
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
@@ -12,7 +12,9 @@ router = Router()
 # Клавиатура
 button1 = KeyboardButton(text="Еженедельник на эту неделю")
 button2 = KeyboardButton(text="Еженедельник на следующую неделю")
-keyboard = ReplyKeyboardMarkup(keyboard=[[button1],[button2]], resize_keyboard=True)
+button3 = KeyboardButton(text="Посмотреть", web_app=types.WebAppInfo(url="https://15bc-188-19-202-149.ngrok-free.app/meetings"))
+button4 = KeyboardButton(text="Создать", web_app=types.WebAppInfo(url="https://15bc-188-19-202-149.ngrok-free.app/createmeeting"))
+keyboard = ReplyKeyboardMarkup(keyboard=[[button1],[button2],[button3],[button4]], resize_keyboard=True)
 
 @router.message(F.text == "Еженедельник на эту неделю")
 async def cmd_view_my_meetings(message: Message):
