@@ -30,16 +30,18 @@ async def webapp_data_handler(message: types.Message):
     # Проверяем, содержит ли сообщение данные WebApp
     if message.web_app_data:
         data = json.loads(message.web_app_data.data)
-
-        user_data = auth_schemas.User(
-            telegram_id = message.from_user.id,
-            token =data
-            
-        )
-        if(auth_service.UserService.get_by_telegram_id(telegram_id = message.from_user.id) == None):
-            await auth_service.UserService.create(user_data=user_data)
+        if(data["token"]==None):
+            await message.answer(message.web_app_data.data)
         else:
-            await auth_service.UserService.update(user_data=user_data)
+            user_data = auth_schemas.User(
+                telegram_id = message.from_user.id,
+                token =data
+                
+            )
+            if(auth_service.UserService.get_by_telegram_id(telegram_id = message.from_user.id) == None):
+                await auth_service.UserService.create(user_data=user_data)
+            else:
+                await auth_service.UserService.update(user_data=user_data)
 
     else:
         await message.answer("Нет данных от WebApp.")
