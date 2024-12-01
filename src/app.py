@@ -13,7 +13,6 @@ from src.bot.__main__ import bot, dp, start_bot, stop_bot
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # logging.info("Starting bot setup...")
     await start_bot()
     webhook_url = settings.get_webhook_url()
     await bot.set_webhook(
@@ -21,12 +20,9 @@ async def lifespan(app: FastAPI):
         allowed_updates=dp.resolve_used_update_types(),
         drop_pending_updates=True
     )
-    # logging.info(f"Webhook set to {webhook_url}")
     yield
-    # logging.info("Shutting down bot...")
     await bot.delete_webhook()
     await stop_bot()
-    # logging.info("Webhook deleted")
 
 
 app = FastAPI(
